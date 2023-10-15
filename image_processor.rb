@@ -32,6 +32,13 @@ class ImageProcessor
     progress_bar = ProgressBar.create(format: '%a %e %P% %B', total: image_files.count)
     
     image_files.each do |source_file|
+      extname = File.extname(source_file).downcase
+
+      if extname == '.png'
+        puts "Skipping #{source_file} (already in PNG format)"
+        next
+      end
+
       # Construct the destination file path with PNG extension
       relative_path = Pathname.new(source_file).relative_path_from(@source_dir)
       dest_file = @dest_dir.join(relative_path).sub(/\.\w+$/, '.png')
