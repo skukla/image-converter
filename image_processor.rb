@@ -5,9 +5,9 @@ require 'pathname'
 require 'fileutils'
 require 'ruby-progressbar'
 
-# Check if ImageMagick is installed
-def imagemagick_installed?
-  system('convert -version > /dev/null 2>&1')
+# Check if ImageMagick and librsvg are installed
+def imagemagick_and_rsvg_installed?
+  system('convert -version > /dev/null 2>&1') && system('rsvg-convert -v > /dev/null 2>&1')
   $?.success?
 end
 
@@ -24,7 +24,7 @@ class ImageProcessor
   def process_images
     # Recursively find all image files in the source directory and subdirectories
     image_files = if @recursive
-      Dir.glob(File.join(@source_dir, '**', '*.{jpg,jpeg,png,gif,bmp,webp,avif}'), File::FNM_CASEFOLD)
+      Dir.glob(File.join(@source_dir, '**', '*.{jpg,jpeg,png,gif,bmp,webp,avif,svg}'), File::FNM_CASEFOLD)
     else
       [source_dir]
     end
@@ -37,28 +37,53 @@ class ImageProcessor
       if extname == '.png'
         puts "Skipping #{source_file} (already in PNG format)"
         next
+      elsif extname == '.svg'
+        convert_svg_to_png(source_file)
+      else
+        convert_image_to_png(source_file)
       end
-
-      # Construct the destination file path with PNG extension
-      relative_path = Pathname.new(source_file).relative_path_from(@source_dir)
-      dest_file = @dest_dir.join(relative_path).sub(/\.\w+$/, '.png')
-
-      # Create the destination directory if it doesn't exist
-      FileUtils.mkdir_p(dest_file.dirname.to_s)
-
-      # Convert the image to PNG format and resize it
-      convert_command = "convert #{source_file} -format png"
-      convert_command += " -resize #{@size}x#{@size}" if @size && !@size.empty?
-      convert_command += " #{dest_file}"
-      puts "Converting #{source_file} to #{dest_file}..."
-      system(convert_command)
-
-      # Delete the original image after successful conversion
-      File.delete(source_file)
 
       # Update progress bar
       progress_bar.increment
     end
+  end
+
+  private
+
+  def convert_image_to_png(source_file)
+    # Construct the destination file path with PNG extension
+    relative_path = Pathname.new(source_file).relative_path_from(@source_dir)
+    dest_file = @dest_dir.join(relative_path).sub(/\.\w+$/, '.png')
+
+    # Create the destination directory if it doesn't exist
+    FileUtils.mkdir_p(dest_file.dirname.to_s)
+
+    # Convert the image to PNG format and resize it (if specified)
+    convert_command = "convert #{source_file} -format png"
+    convert_command += " -resize #{@size}x#{@size}" if @size && !@size.empty?
+    convert_command += " #{dest_file}"
+    puts "Converting #{source_file} to #{dest_file}..."
+    system(convert_command)
+
+    # Delete the original image after successful conversion
+    File.delete(source_file)
+  end
+
+  def convert_svg_to_png(source_file)
+    # Construct the destination file path with PNG extension
+    relative_path = Pathname.new(source_file).relative_path_from(@source_dir)
+    dest_file = @dest_dir.join(relative_path).sub(/\.\w+$/, '.png')
+
+    # Create the destination directory if it doesn't exist
+    FileUtils.mkdir_p(dest_file.dirname.to_s)
+
+    # Convert the SVG to PNG format and resize it (if specified)
+    convert_command = "rsvg-convert -f png -o #{dest_file} #{source_file}"
+    puts "Converting #{source_file} to #{dest_file}..."
+    system(convert_command)
+
+    # Delete the original SVG file after successful conversion
+    File.delete(source_file)
   end
 end
 
@@ -74,6 +99,11 @@ OptionParser.new do |opts|
     options[:single] = image_file
   end
 end.parse!
+
+unless imagemagick_and_rsvg_installed?
+  puts "ImageMagick and/or librsvg are not installed. Please install them to use this script."
+  exit 1
+end
 
 if options[:single]
   unless ARGV.size == 0
