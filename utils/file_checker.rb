@@ -1,4 +1,4 @@
-# file_checker.rb - Utility module for checking file formats
+# utils/file_checker.rb - Utility module for checking file formats
 
 module FileChecker
   SUPPORTED_IMAGE_EXTENSIONS = %w[jpg jpeg png gif svg]

@@ -1,49 +1,137 @@
-# Main Entry Point
-- Import required modules
-- Collect and validate command-line arguments using ArgumentsCollector
-- Check for ImageMagick installation using ErrorHandler
-- Count the total number of images in the source directory
-- Initialize ScreenPrinter
-- Process image conversion, resizing, renaming, and deletion tasks using TaskProcessor
-- Print a completion message
+# Application Entry Point
+main.rb:
+  - Import ErrorHandler module
+  - Check system requirements using ErrorHandler
+  - Import ScreenPrinter, ArgumentsCollector, and TaskProcessor modules
+  - Collect and validate command-line arguments using ArgumentsCollector
+  - Record the start time
+  - Process tasks using TaskProcessor
+  - Record the end time and calculate elapsed time
+  - Print a newline using ScreenPrinter
+  - Print a summary of the task, including hours, minutes, and seconds, using ScreenPrinter
 
-# Arguments Collector Module
-- Define a module called ArgumentsCollector
-  - Import the 'optparse' library
-  - Create a method called 'collect' to collect and validate command-line arguments
-    - Initialize an empty options hash
-    - Create an OptionParser object to define command-line options and their handling
-    - Add options for source path, destination path, size, and help
-    - Parse the command-line arguments and validate them
-    - Return the validated options
+# Argument Collector Module
+arguments_collector.rb:
+  - Define module ArgumentsCollector
+  - Require 'optparse'
+
+  - collect method:
+      - Initialize options hash
+      - Create an OptionParser
+      - Configure options for source path, destination path, and size
+      - Define a help option to display usage instructions
+      - Parse command-line arguments
+      - Validate arguments to ensure the source path is provided
+      - Return the options hash
+
+  - validate_arguments method:
+      - Check if the source path is provided; if not, display an error and exit
 
 # Error Handler Module
-- Define a module called ErrorHandler
-  - Create a method called 'check_libraries' to check for required libraries (e.g., ImageMagick)
-    - Define a list of required commands (e.g., 'convert' from ImageMagick)
-    - Check if each required command is available, print an error message if not
-    - Optionally, perform additional checks based on the source format
+error_handler.rb:
+  - Define module ErrorHandler
 
-# Task Processor Module
-- Define a module called TaskProcessor
-  - Create a method called 'process_tasks' to perform image processing tasks
-    - Get a list of image files in the source directory and its subdirectories
-    - Initialize a progress bar and total images count
-    - Process each image file:
-      - Display the image file name
-      - Determine the destination file path (convert to PNG format if needed)
-      - Convert the image to PNG format and resize if a size is provided
-      - Rename the image file with dashes instead of underscores
-      - Display progress and rename the image
-      - Delete the original source image
-    - Count the total number of images
-  - Create a method called 'count_images' to count the total number of images in the source directory
+  - check_requirements method:
+      - Initialize lists for missing libraries, commands, and gems
+      - Iterate through requirements (library, command, gem)
+        - For each component in the requirement
+        - Check if the component is available (library and command) or can be loaded (gem)
+        - If not available, add it to the corresponding missing list
+
+      - If missing libraries or commands exist, display warnings and exit
+      - If missing gems exist, display warnings and exit
 
 # Screen Printer Module
-- Define a module called ScreenPrinter
-  - Create methods to handle screen output:
-    - 'print_processing' to display the image file name
-    - 'print_progress' to display a progress bar and percentage
-    - 'start' to initialize the progress bar
-    - 'print_message' to print a message
-    - 'print_newline' to print a newline
+screen_printer.rb:
+  - Define module ScreenPrinter
+  - Import Colors module
+
+  - print_progress method:
+      - Calculate progress percentage
+      - Define progress bar length, completed length, and remaining length
+      - Create a progress bar string with colors and percentage
+      - Print the progress bar
+
+  - start method:
+      - Initialize the progress display with total images
+
+  - print_message method:
+      - Print a message to the console
+
+  - print_newline method:
+      - Print a newline to the console
+
+  - print_summary method:
+      - Print a summary of total images, converted images, skipped images, and elapsed time
+
+# Task Processor Module
+task_processor.rb:
+  - Define module TaskProcessor
+  - Include FileChecker module
+  - Initialize counters for converted and skipped images
+  - Define converted_images and skipped_images methods
+  - Define count_images method to count total images
+  - Define get_total_images method to retrieve image count
+
+  - get_image_files method:
+      - Define supported image extensions
+      - Glob image files with supported extensions
+      - Return the list of image files
+
+  - get_image_size method:
+      - Run a system command to get image dimensions
+      - Parse the command output to extract dimensions
+      - Return width and height if available, else nil
+
+  - convert_and_resize_image method:
+      - Get source image dimensions
+      - If size specified, resize the image
+      - Otherwise, handle SVG conversion if necessary
+      - Increment the converted image counter
+
+  - should_convert_image? method:
+      - Check if the image is supported and not a PNG file
+
+  - generate_destination_image method:
+      - Generate a new filename for the destination image
+      - Return the full path for the destination image
+
+  - delete_source_image method:
+      - Delete the source image file
+
+  - print_conversion_message method:
+      - Print a conversion message with source and destination filenames
+
+  - print_skip_message method:
+      - Print a skip message for skipped images
+
+  - print_progress_if_all_skipped method:
+      - If all images are skipped, print progress
+
+  - process_tasks method:
+      - Get a list of image files in the source directory
+      - Initialize the progress display with total images
+      - Iterate through image files
+        - Check if the image should be converted
+        - If yes, generate a destination path and convert the image
+        - Delete the source image
+        - Print progress and messages
+        - If no, skip the image and print a skip message
+      - Print final progress if all images are skipped
+
+# Colors Utility Module
+colors.rb:
+  - Define module Colors
+  - Define color constants
+
+# Constants Utility Module
+constants.rb:
+  - Define module Constants
+  - Define a list of supported image types for conversion
+
+# File Checker Utility Module
+file_checker.rb:
+  - Define module FileChecker
+  - Define supported image extensions
+  - Define supported_image? method to check if an image is supported
+  - Define png_file? method to check if an image is in PNG format

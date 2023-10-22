@@ -1,4 +1,4 @@
-# main.rb
+# main.rb -- Application entry point
 
 require_relative "./lib/error_handler"
 
@@ -13,25 +13,24 @@ require_relative "./lib/task_processor"
 
 options = ArgumentsCollector.collect
 total_images = TaskProcessor.count_images(options[:source_path])
-printer = ScreenPrinter
 
 @start_time = Time.now
 
 TaskProcessor.process_tasks(
   source_path: options[:source_path],
   destination_path: options[:destination_path],
-  size: options[:size],
-  printer: printer
+  size: options[:size]
 )
 
 end_time = Time.now
-elapsed_time = end_time - @start_time
+elapsed_time_seconds = end_time - @start_time
+elapsed_time_formatted = Time.at(elapsed_time_seconds).utc.strftime("%H:%M:%S")
 
-printer.print_newline
+ScreenPrinter.print_newline
 
-printer.print_summary(
+ScreenPrinter.print_summary(
   total_images,
   TaskProcessor.converted_images,
   TaskProcessor.skipped_images,
-  elapsed_time
+  elapsed_time_formatted
 )

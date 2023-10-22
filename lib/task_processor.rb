@@ -1,4 +1,4 @@
-# Task Processor
+# Task Processor - Processes image conversion, renaming, and deletion
 
 require_relative "../utils/file_checker"
 require_relative "../utils/colors"
@@ -75,27 +75,27 @@ module TaskProcessor
   end
 
   def self.print_conversion_message(source_image, destination_image)
-    message =
+    ScreenPrinter.print_message(
       "Converting #{Colors::CYAN}#{File.basename(source_image)}#{Colors::RESET} to #{Colors::FUSCIA}#{File.basename(destination_image)}#{Colors::RESET}..."
-    ScreenPrinter.print_message(message)
+    )
   end
 
   def self.print_skip_message(source_image)
-    message =
+    ScreenPrinter.print_message(
       "#{Colors::YELLOW}Skipping #{File.basename(source_image)}#{Colors::RESET}..."
-    ScreenPrinter.print_message(message)
+    )
   end
 
-  def self.print_progress_if_all_skipped(total_images, printer)
+  def self.print_progress_if_all_skipped(total_images)
     if @skipped_images == total_images
-      printer.print_progress(total_images, total_images)
+      ScreenPrinter.print_progress(total_images, total_images)
     end
   end
 
-  def self.process_tasks(source_path:, destination_path:, size:, printer:)
+  def self.process_tasks(source_path:, destination_path:, size:)
     image_files = get_image_files(source_path)
     total_images = get_total_images(source_path)
-    printer.start(total_images)
+    ScreenPrinter.start(total_images)
 
     image_files.each_with_index do |source_image, index|
       if should_convert_image?(source_image)
@@ -104,13 +104,13 @@ module TaskProcessor
         print_conversion_message(source_image, destination_image)
         convert_and_resize_image(source_image, destination_image, size)
         delete_source_image(source_image)
-        printer.print_progress(index + 1, total_images)
+        ScreenPrinter.print_progress(index + 1, total_images)
       else
         print_skip_message(source_image)
         @skipped_images += 1
       end
     end
 
-    print_progress_if_all_skipped(total_images, printer)
+    print_progress_if_all_skipped(total_images)
   end
 end

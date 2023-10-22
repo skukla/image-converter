@@ -1,4 +1,4 @@
-# colors.rb -- ASCII colors
+# utils/colors.rb -- Utility class for defining ASCII colors
 
 class Colors
   GREEN = "\e[38;5;2m"
