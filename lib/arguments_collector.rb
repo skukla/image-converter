@@ -1,10 +1,8 @@
-# arguments_collector.rb - Collect and validate command-line arguments
+# lib/arguments_collector.rb - Collect and validate command-line arguments
 
-# Define a module for collecting and validating command-line arguments
 module ArgumentsCollector
   require "optparse"
 
-  # Define a method to collect and validate command-line arguments
   def self.collect
     options = {}
     parser =
@@ -44,14 +42,10 @@ module ArgumentsCollector
 
   private
 
-  # Define a method to validate arguments
   def self.validate_arguments(options)
-    # Validate source path (required)
     unless options.key?(:source_path)
-      puts "Source path is required. Use '-h' for help."
+      puts "Error: Source path is required. Use '-h' for help."
       exit(1)
     end
-
-    # You can add additional validation logic here for destination and size arguments if needed
   end
 end

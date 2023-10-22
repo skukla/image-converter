@@ -4,7 +4,6 @@
   "type": "module",
   "devDependencies": {
     "@prettier/plugin-ruby": "^4.0.2",
-    "bun-types": "latest",
     "prettier": "^3.0.3"
   },
   "peerDependencies": {
