@@ -1,0 +1,18 @@
+I want to write a ruby program:
+
+- The program should have an entry point script called main.rb
+- The program's logic should be divided into modules and/or classes
+- The program's logic should be stored in separate files
+- The program should include separate classes for collecting arguments, handling errors, printing to the screen, and processing tasks
+
+Here is a description of what the program should do
+
+- To use the program, a user will provide a required source path which will either be: a single image file, a directory containing image files, or a directory of any number of directories which may contain image files.  The image files will be of any major type, but may certainly include: jpg/jpeg, png, gif, or svg.
+- The user may also pass an optional destination path and an optional size argument to the program.
+- The purpose of the script is to convert the image or images to a new format, resize them, and also rename them. Each image should be renamed so that any underscores are replaced with dashes.
+- For each image processed, the program should show a progress bar and output messaging which indicates that the source image was processed to a destination image.  It should also indicate that the source image was renamed to a new name.
+- All images should be converted from their source format into png.  If the source image or images are png, they should be skipped, and the program should include messaging that says they were skipped.
+- Once the destination images are created, the source images should be deleted
+- The program should insure that any libraries are installed.  If the libraries are not installed, the program should show error messaging and exit
+
+Convert these instructions into psuedo code which looks like YAML format.

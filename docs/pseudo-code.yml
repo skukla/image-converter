@@ -1,0 +1,49 @@
+# Main Entry Point
+- Import required modules
+- Collect and validate command-line arguments using ArgumentsCollector
+- Check for ImageMagick installation using ErrorHandler
+- Count the total number of images in the source directory
+- Initialize ScreenPrinter
+- Process image conversion, resizing, renaming, and deletion tasks using TaskProcessor
+- Print a completion message
+
+# Arguments Collector Module
+- Define a module called ArgumentsCollector
+  - Import the 'optparse' library
+  - Create a method called 'collect' to collect and validate command-line arguments
+    - Initialize an empty options hash
+    - Create an OptionParser object to define command-line options and their handling
+    - Add options for source path, destination path, size, and help
+    - Parse the command-line arguments and validate them
+    - Return the validated options
+
+# Error Handler Module
+- Define a module called ErrorHandler
+  - Create a method called 'check_libraries' to check for required libraries (e.g., ImageMagick)
+    - Define a list of required commands (e.g., 'convert' from ImageMagick)
+    - Check if each required command is available, print an error message if not
+    - Optionally, perform additional checks based on the source format
+
+# Task Processor Module
+- Define a module called TaskProcessor
+  - Create a method called 'process_tasks' to perform image processing tasks
+    - Get a list of image files in the source directory and its subdirectories
+    - Initialize a progress bar and total images count
+    - Process each image file:
+      - Display the image file name
+      - Determine the destination file path (convert to PNG format if needed)
+      - Convert the image to PNG format and resize if a size is provided
+      - Rename the image file with dashes instead of underscores
+      - Display progress and rename the image
+      - Delete the original source image
+    - Count the total number of images
+  - Create a method called 'count_images' to count the total number of images in the source directory
+
+# Screen Printer Module
+- Define a module called ScreenPrinter
+  - Create methods to handle screen output:
+    - 'print_processing' to display the image file name
+    - 'print_progress' to display a progress bar and percentage
+    - 'start' to initialize the progress bar
+    - 'print_message' to print a message
+    - 'print_newline' to print a newline
