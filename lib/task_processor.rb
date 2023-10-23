@@ -45,8 +45,14 @@ module TaskProcessor
 
   def self.get_image_size(file_path)
     output = `file "#{file_path}" 2>&1`
-    match = output.match(/(\d+) x (\d+)/)
-    return match[1].to_i, match[2].to_i if match
+    begin
+      match = output.match(/(\d+) x (\d+)/)
+      return match[1].to_i, match[2].to_i if match
+    rescue ArgumentError => e
+      ScreenPrinter.print_message(
+        "#{Colors::RED}WARNING:#{Colors::RESET} #{e.message}"
+      )
+    end
 
     nil
   end
@@ -68,15 +74,16 @@ module TaskProcessor
   end
 
   def self.convert_and_resize_image(source_image, destination_image, size)
-    source_width, source_height = get_image_size(source_image)
-
-    if size
-      `convert "#{source_image}" -resize #{size} "#{destination_image}" 2>/dev/null`
+    if size && !size.empty?
+      `convert "#{source_image}" -resize #{size} "#{destination_image}"`
     else
-      if source_image =~ /\.(svg)$/i
-        `rsvg-convert -f png -o "#{destination_image}" "#{source_image}" 2>/dev/null`
+      source_width, source_height = get_image_size(source_image)
+      if source_width && source_height
+        `convert "#{source_image}" -resize #{source_width}x#{source_height} "#{destination_image}"`
+      elsif source_image =~ /\.(svg)$/i
+        `rsvg-convert -f png -o "#{destination_image}" "#{source_image}"`
       else
-        `convert "#{source_image}" "#{destination_image}" 2>/dev/null`
+        `convert "#{source_image}" "#{destination_image}"`
       end
     end
 
@@ -85,7 +92,12 @@ module TaskProcessor
 
   def self.generate_destination_image(source_image, destination_path)
     new_name = File.basename(source_image, ".*").gsub(/[_]/, "-") + ".png"
-    File.join(destination_path || File.dirname(source_image), new_name)
+    destination_path ||= File.dirname(source_image)
+
+    # Ensure the destination path is a full path
+    destination_path = File.expand_path(destination_path)
+
+    File.join(destination_path, new_name)
   end
 
   def self.delete_source_image(source_image)

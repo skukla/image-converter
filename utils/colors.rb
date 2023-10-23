@@ -8,5 +8,6 @@ class Colors
   FUSCIA = "\e[38;5;13m"
   CYAN = "\e[38;5;6m"
   BOLD_WHITE = "\e[97;1m"
+  RED = "\e[38;5;9m"
   RESET = "\e[0m"
 end
