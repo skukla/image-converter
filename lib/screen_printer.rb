@@ -32,6 +32,7 @@ module ScreenPrinter
 
   def self.print_summary(
     total_images,
+    renamed_images,
     converted_images,
     skipped_images,
     elapsed_time_formatted
@@ -41,13 +42,16 @@ module ScreenPrinter
       "Total Images: #{Colors::BOLD_WHITE}#{total_images}#{Colors::RESET}"
     )
     print_message(
+      "Renamed Images: #{Colors::FUSCIA}#{renamed_images}#{Colors::RESET}"
+    )
+    print_message(
       "Converted Images: #{Colors::GREEN}#{converted_images}#{Colors::RESET}"
     )
     print_message(
       "Skipped Images: #{Colors::YELLOW}#{skipped_images}#{Colors::RESET}"
     )
     print_message(
-      "Elapsed Time: #{Colors::FUSCIA}#{elapsed_time_formatted}#{Colors::RESET}"
+      "Elapsed Time: #{Colors::BOLD_WHITE}#{elapsed_time_formatted}#{Colors::RESET}"
     )
   end
 end

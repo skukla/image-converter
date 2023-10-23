@@ -62,14 +62,14 @@ screen_printer.rb:
       - Print a newline to the console
 
   - print_summary method:
-      - Print a summary of total images, converted images, skipped images, and elapsed time
+      - Print a summary of total images, renamed images, converted images, skipped images, and elapsed time
 
 # Task Processor Module
 task_processor.rb:
   - Define module TaskProcessor
   - Include FileChecker module
-  - Initialize counters for converted and skipped images
-  - Define converted_images and skipped_images methods
+  - Initialize counters for converted, renamed, and skipped images
+  - Define converted_images, renamed_images, and skipped_images methods
   - Define count_images method to count total images
   - Define get_total_images method to retrieve image count
 
@@ -83,14 +83,21 @@ task_processor.rb:
       - Parse the command output to extract dimensions
       - Return width and height if available, else nil
 
+  - rename_image method:
+      - Rename the source image file
+      - Increment the renamed image counter
+
+  - should_rename_image? method:
+      - Check if the image needs renaming
+
+  - should_convert_image? method:
+      - Check if the image is supported for conversion
+
   - convert_and_resize_image method:
       - Get source image dimensions
       - If size specified, resize the image
       - Otherwise, handle SVG conversion if necessary
       - Increment the converted image counter
-
-  - should_convert_image? method:
-      - Check if the image is supported and not a PNG file
 
   - generate_destination_image method:
       - Generate a new filename for the destination image
@@ -99,25 +106,28 @@ task_processor.rb:
   - delete_source_image method:
       - Delete the source image file
 
+  - print_rename_message method:
+      - Print a message for renaming an image
+
   - print_conversion_message method:
-      - Print a conversion message with source and destination filenames
+      - Print a message for converting an image
 
   - print_skip_message method:
-      - Print a skip message for skipped images
+      - Print a message for skipped images
 
-  - print_progress_if_all_skipped method:
-      - If all images are skipped, print progress
+  - print_final_progress method:
+      - Print a message if no images were processed or if all images were skipped or renamed
 
   - process_tasks method:
       - Get a list of image files in the source directory
+      - If no image files found, print a message and exit
       - Initialize the progress display with total images
       - Iterate through image files
-        - Check if the image should be converted
-        - If yes, generate a destination path and convert the image
-        - Delete the source image
+        - Check if the image should be converted or renamed
+        - If yes, generate a destination path and process the image
         - Print progress and messages
-        - If no, skip the image and print a skip message
-      - Print final progress if all images are skipped
+        - If no, skip the image, print a skip message, and increment the skipped image counter
+      - Print final progress if no images were processed or if all images were skipped or renamed
 
 # Colors Utility Module
 colors.rb:
@@ -135,3 +145,4 @@ file_checker.rb:
   - Define supported image extensions
   - Define supported_image? method to check if an image is supported
   - Define png_file? method to check if an image is in PNG format
+  - Define needs_rename? method to check if an image has underscores in its filename

@@ -10,7 +10,12 @@ module TaskProcessor
 
   @total_images = nil
   @skipped_images = 0
+  @renamed_images = 0
   @converted_images = 0
+
+  def self.renamed_images
+    @renamed_images
+  end
 
   def self.converted_images
     @converted_images
@@ -44,6 +49,22 @@ module TaskProcessor
     nil
   end
 
+  def self.rename_image(source_image)
+    new_name = File.basename(source_image, ".*").gsub(/[_]/, "-") + ".png"
+    File.rename(source_image, File.join(File.dirname(source_image), new_name))
+
+    @renamed_images += 1
+  end
+
+  def self.should_rename_image?(source_image)
+    FileChecker.needs_rename?(source_image)
+  end
+
+  def self.should_convert_image?(source_image)
+    supported_image = FileChecker.supported_image?(source_image)
+    !FileChecker.png_file?(source_image) && supported_image
+  end
+
   def self.convert_and_resize_image(source_image, destination_image, size)
     source_width, source_height = get_image_size(source_image)
 
@@ -60,11 +81,6 @@ module TaskProcessor
     @converted_images += 1
   end
 
-  def self.should_convert_image?(source_image)
-    FileChecker.supported_image?(source_image) &&
-      !FileChecker.png_file?(source_image)
-  end
-
   def self.generate_destination_image(source_image, destination_path)
     new_name = File.basename(source_image, ".*").gsub(/[_]/, "-") + ".png"
     File.join(destination_path || File.dirname(source_image), new_name)
@@ -72,6 +88,12 @@ module TaskProcessor
 
   def self.delete_source_image(source_image)
     File.delete(source_image)
+  end
+
+  def self.print_rename_message(source_image, destination_image)
+    ScreenPrinter.print_message(
+      "Renaming #{Colors::CYAN}#{File.basename(source_image)}#{Colors::RESET} to #{Colors::FUSCIA}#{File.basename(destination_image)}#{Colors::RESET}..."
+    )
   end
 
   def self.print_conversion_message(source_image, destination_image)
@@ -86,31 +108,57 @@ module TaskProcessor
     )
   end
 
-  def self.print_progress_if_all_skipped(total_images)
-    if @skipped_images == total_images
-      ScreenPrinter.print_progress(total_images, total_images)
+  def self.print_final_progress
+    if @converted_images == 0 && @renamed_images == 0 && @skipped_images == 0
+      return ScreenPrinter.print_message("No images were processed.")
+    end
+
+    if @skipped_images == @total_images || @renamed_images == @total_images
+      ScreenPrinter.print_progress(@total_images, @total_images)
     end
   end
 
   def self.process_tasks(source_path:, destination_path:, size:)
     image_files = get_image_files(source_path)
+
+    if image_files.empty?
+      ScreenPrinter.print_message("No images found to convert.")
+      exit
+    end
+
     total_images = get_total_images(source_path)
     ScreenPrinter.start(total_images)
 
     image_files.each_with_index do |source_image, index|
+      destination_image =
+        generate_destination_image(source_image, destination_path)
+
+      unless should_convert_image?(source_image) ||
+               should_rename_image?(source_image)
+        @skipped_images += 1
+        print_skip_message(source_image)
+        next
+      end
+
+      if should_rename_image?(source_image) &&
+           !should_convert_image?(source_image)
+        print_rename_message(source_image, destination_image)
+        rename_image(source_image)
+      end
+
       if should_convert_image?(source_image)
-        destination_image =
-          generate_destination_image(source_image, destination_path)
         print_conversion_message(source_image, destination_image)
         convert_and_resize_image(source_image, destination_image, size)
         delete_source_image(source_image)
-        ScreenPrinter.print_progress(index + 1, total_images)
-      else
-        print_skip_message(source_image)
-        @skipped_images += 1
       end
+
+      ScreenPrinter.print_progress(index + 1, total_images)
     end
 
-    print_progress_if_all_skipped(total_images)
+    if @converted_images == 0 && @renamed_images == 0 && @skipped_images == 0
+      ScreenPrinter.print_message("No images were processed.")
+    end
+
+    print_final_progress
   end
 end

@@ -30,6 +30,7 @@ ScreenPrinter.print_newline
 
 ScreenPrinter.print_summary(
   total_images,
+  TaskProcessor.renamed_images,
   TaskProcessor.converted_images,
   TaskProcessor.skipped_images,
   elapsed_time_formatted
