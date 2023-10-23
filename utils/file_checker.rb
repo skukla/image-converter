@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # utils/file_checker.rb - Utility module for checking file formats
 
 module FileChecker

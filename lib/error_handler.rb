@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # lib/error_handler.rb - Handle errors and check for required utilities
 
 module ErrorHandler

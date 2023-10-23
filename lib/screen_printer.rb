@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # lib/screen_printer.rb - Print output to the screen
 
 require_relative "../utils/colors"

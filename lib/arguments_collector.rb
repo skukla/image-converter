@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # lib/arguments_collector.rb - Collect and validate command-line arguments
 
 module ArgumentsCollector

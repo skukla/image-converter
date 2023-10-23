@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # utils/colors.rb -- Utility class for defining ASCII colors
 
 class Colors

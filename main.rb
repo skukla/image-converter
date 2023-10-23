@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # main.rb -- Application entry point
 
 require_relative "./lib/error_handler"

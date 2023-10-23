@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # Task Processor - Processes image conversion, renaming, and deletion
 
 require_relative "../utils/file_checker"
