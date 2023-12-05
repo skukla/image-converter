@@ -5,7 +5,7 @@
 require_relative "./lib/error_handler"
 
 ErrorHandler.check_requirements(
-  "library" => ["magick"],
+  "library" => ["imagemagick", "librsvg"],
   "command" => ["rsvg-convert"]
 )
 
