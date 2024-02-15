@@ -10,6 +10,7 @@ require_relative "screen_printer"
 module TaskProcessor
   include FileChecker
 
+  @default_format = "png"
   @total_images = nil
   @skipped_images = 0
   @renamed_images = 0
@@ -35,10 +36,13 @@ module TaskProcessor
     @total_images ||= get_image_files(source_path).length
   end
 
-  def self.get_image_files(directory)
+  def self.get_image_files(source)
     supported_extensions = Constants::SUPPORTED_IMAGE_EXTENSIONS.join(",")
+
+    return [File.join(source)] unless File.directory?(source)
+
     Dir.glob(
-      File.join(directory, "**", "*.{#{supported_extensions}}"),
+      File.join(source, "**", "*.{#{supported_extensions}}"),
       File::FNM_CASEFOLD
     )
   end
@@ -58,7 +62,10 @@ module TaskProcessor
   end
 
   def self.rename_image(source_image)
-    new_name = File.basename(source_image, ".*").gsub(/[_]/, "-") + ".png"
+    new_name =
+      File.basename(source_image, ".*").gsub(/[_]/, "-") +
+        ".#{FileChecker.ext(source_image)}"
+
     File.rename(source_image, File.join(File.dirname(source_image), new_name))
 
     @renamed_images += 1
@@ -68,12 +75,22 @@ module TaskProcessor
     FileChecker.needs_rename?(source_image)
   end
 
-  def self.should_convert_image?(source_image)
-    supported_image = FileChecker.supported_image?(source_image)
-    !FileChecker.png_file?(source_image) && supported_image
+  def self.set_format(source_image, format)
+    result = @default_format
+    result = format unless format.nil?
+    result
   end
 
-  def self.convert_and_resize_image(source_image, destination_image, size)
+  def self.should_convert_image?(source_image, format)
+    FileChecker.image_exists?(source_image) && FileChecker.supported_image?(source_image) && set_format(source_image, format) != FileChecker.ext(source_image)
+  end
+
+  def self.convert_and_resize_image(
+    source_image,
+    destination_image,
+    format,
+    size
+  )
     if size && !size.empty?
       `convert "#{source_image}" -resize #{size} "#{destination_image}"`
     else
@@ -81,7 +98,7 @@ module TaskProcessor
       if source_width && source_height
         `convert "#{source_image}" -resize #{source_width}x#{source_height} "#{destination_image}"`
       elsif source_image =~ /\.(svg)$/i
-        `rsvg-convert -f png -o "#{destination_image}" "#{source_image}"`
+        `rsvg-convert -f #{set_format(source_image)} -o "#{destination_image}" "#{source_image}"`
       else
         `convert "#{source_image}" "#{destination_image}"`
       end
@@ -90,14 +107,11 @@ module TaskProcessor
     @converted_images += 1
   end
 
-  def self.generate_destination_image(source_image, destination_path)
-    new_name = File.basename(source_image, ".*").gsub(/[_]/, "-") + ".png"
+  def self.generate_destination_image(source_image, destination_path, format)
     destination_path ||= File.dirname(source_image)
-
-    # Ensure the destination path is a full path
-    destination_path = File.expand_path(destination_path)
-
-    File.join(destination_path, new_name)
+    new_format = set_format(source_image, format)
+    
+    File.join(destination_path, File.basename(source_image, ".*") +".#{new_format}")
   end
 
   def self.delete_source_image(source_image)
@@ -132,7 +146,7 @@ module TaskProcessor
     end
   end
 
-  def self.process_tasks(source_path:, destination_path:, size:)
+  def self.process_tasks(source_path:, destination_path:, format:, size:)
     image_files = get_image_files(source_path)
 
     if image_files.empty?
@@ -145,9 +159,9 @@ module TaskProcessor
 
     image_files.each_with_index do |source_image, index|
       destination_image =
-        generate_destination_image(source_image, destination_path)
+        generate_destination_image(source_image, destination_path, format)
 
-      unless should_convert_image?(source_image) ||
+      unless should_convert_image?(source_image, format) ||
                should_rename_image?(source_image)
         @skipped_images += 1
         print_skip_message(source_image)
@@ -155,14 +169,14 @@ module TaskProcessor
       end
 
       if should_rename_image?(source_image) &&
-           !should_convert_image?(source_image)
+           !should_convert_image?(source_image, format)
         print_rename_message(source_image, destination_image)
         rename_image(source_image)
       end
 
-      if should_convert_image?(source_image)
+      if should_convert_image?(source_image, format)
         print_conversion_message(source_image, destination_image)
-        convert_and_resize_image(source_image, destination_image, size)
+        convert_and_resize_image(source_image, destination_image, format, size)
         delete_source_image(source_image)
       end
 

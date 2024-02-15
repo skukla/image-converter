@@ -21,6 +21,12 @@ module ArgumentsCollector
           "Destination path (optional)"
         ) { |destination| options[:destination_path] = destination }
 
+        opts.on(
+          "-f",
+          "--format FORMAT",
+          "Format argument (optional)"
+        ) { |format| options[:format] = format }
+
         opts.on("-z", "--size SIZE", "Size argument (optional)") do |size|
           options[:size] = size
         end

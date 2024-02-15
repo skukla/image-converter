@@ -20,6 +20,7 @@ total_images = TaskProcessor.count_images(options[:source_path])
 TaskProcessor.process_tasks(
   source_path: options[:source_path],
   destination_path: options[:destination_path],
+  format: options[:format],
   size: options[:size]
 )
 
