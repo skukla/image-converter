@@ -61,12 +61,12 @@ module TaskProcessor
     nil
   end
 
-  def self.rename_image(source_image)
-    new_name =
-      File.basename(source_image, ".*").gsub(/[_]/, "-") +
-        ".#{FileChecker.ext(source_image)}"
-
-    File.rename(source_image, File.join(File.dirname(source_image), new_name))
+  def self.set_image_name(source_image)
+    File.basename(source_image, ".*").gsub(/_/, "-") + ".#{FileChecker.ext(source_image)}"
+  end
+  
+  def self.rename_image(source_image)    
+    File.rename(source_image, File.join(File.dirname(source_image), set_image_name(source_image)))
 
     @renamed_images += 1
   end
@@ -109,9 +109,8 @@ module TaskProcessor
 
   def self.generate_destination_image(source_image, destination_path, format)
     destination_path ||= File.dirname(source_image)
-    new_format = set_format(source_image, format)
     
-    File.join(destination_path, File.basename(source_image, ".*") +".#{new_format}")
+    File.join(destination_path, File.basename(set_image_name(source_image), ".*") +".#{set_format(source_image, format)}")
   end
 
   def self.delete_source_image(source_image)
@@ -158,8 +157,6 @@ module TaskProcessor
     ScreenPrinter.start(total_images)
 
     image_files.each_with_index do |source_image, index|
-      destination_image =
-        generate_destination_image(source_image, destination_path, format)
 
       unless should_convert_image?(source_image, format) ||
                should_rename_image?(source_image)
@@ -168,8 +165,10 @@ module TaskProcessor
         next
       end
 
-      if should_rename_image?(source_image) &&
-           !should_convert_image?(source_image, format)
+      destination_image =
+        generate_destination_image(source_image, destination_path, format)
+
+      if should_rename_image?(source_image)
         print_rename_message(source_image, destination_image)
         rename_image(source_image)
       end
