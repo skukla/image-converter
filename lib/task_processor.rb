@@ -62,7 +62,7 @@ module TaskProcessor
   end
 
   def self.set_image_name(source_image)
-    File.basename(source_image, ".*").gsub(/_/, "-") +
+    File.basename(source_image, ".*").gsub(/_/, "-").downcase +
       ".#{FileChecker.ext(source_image)}"
   end
 

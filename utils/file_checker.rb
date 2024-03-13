@@ -17,6 +17,6 @@ module FileChecker
   end
 
   def self.needs_rename?(image_path)
-    File.basename(image_path).include?("_")
+    File.basename(image_path).include?("_") || File.basename(image_path).match(/[A-Z]/)
   end
 end
