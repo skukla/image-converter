@@ -98,15 +98,15 @@ module TaskProcessor
     size
   )
     if size && !size.empty?
-      `convert "#{source_image}" -resize #{size} "#{destination_image}"`
+      `magick "#{source_image}" -resize #{size} "#{destination_image}"`
     else
       source_width, source_height = get_image_size(source_image)
       if source_width && source_height
-        `convert "#{source_image}" -resize #{source_width}x#{source_height} "#{destination_image}"`
+        `magick "#{source_image}" -resize #{source_width}x#{source_height} "#{destination_image}"`
       elsif source_image =~ /\.(svg)$/i
         `rsvg-convert -f #{set_format(format)} -o "#{destination_image}" "#{source_image}"`
       else
-        `convert "#{source_image}" "#{destination_image}"`
+        `magick "#{source_image}" "#{destination_image}"`
       end
     end
 
