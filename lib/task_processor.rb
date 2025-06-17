@@ -97,7 +97,10 @@ module TaskProcessor
     format,
     size
   )
-    if size && !size.empty?
+    # Special handling for PNG to SVG conversion to preserve full image
+    if set_format(format) == "svg" && source_image =~ /\.(png|jpg|jpeg|gif|bmp|tiff)$/i
+      convert_raster_to_svg(source_image, destination_image, size)
+    elsif size && !size.empty?
       `magick "#{source_image}" -resize #{size} "#{destination_image}"`
     else
       source_width, source_height = get_image_size(source_image)
@@ -111,6 +114,53 @@ module TaskProcessor
     end
 
     @converted_images += 1
+  end
+
+  def self.convert_raster_to_svg(source_image, destination_image, size)
+    # Get image dimensions
+    source_width, source_height = get_image_size(source_image)
+    
+    # Convert to base64 for embedding
+    require 'base64'
+    image_data = File.read(source_image)
+    base64_data = Base64.strict_encode64(image_data)
+    
+    # Determine MIME type
+    mime_type = case File.extname(source_image).downcase
+                when '.png' then 'image/png'
+                when '.jpg', '.jpeg' then 'image/jpeg'
+                when '.gif' then 'image/gif'
+                when '.bmp' then 'image/bmp'
+                when '.tiff', '.tif' then 'image/tiff'
+                else 'image/png'
+                end
+    
+    # Apply resize if specified
+    if size && !size.empty?
+      if size.include?('x')
+        width, height = size.split('x').map(&:to_i)
+      else
+        # If only one dimension is given, maintain aspect ratio
+        width = size.to_i
+        height = (source_height * width / source_width).to_i
+      end
+    else
+      width = source_width
+      height = source_height
+    end
+    
+    # Create SVG with embedded image
+    svg_content = <<~SVG
+      <?xml version="1.0" encoding="UTF-8"?>
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+           width="#{width}" height="#{height}" viewBox="0 0 #{width} #{height}">
+        <image x="0" y="0" width="#{width}" height="#{height}" 
+               xlink:href="data:#{mime_type};base64,#{base64_data}"/>
+      </svg>
+    SVG
+    
+    # Write SVG file
+    File.write(destination_image, svg_content)
   end
 
   def self.generate_destination_image(source_image, destination_path, format)
