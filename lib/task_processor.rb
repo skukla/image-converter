@@ -97,23 +97,39 @@ module TaskProcessor
     format,
     size
   )
+    success = false
+    
     # Special handling for PNG to SVG conversion to preserve full image
     if set_format(format) == "svg" && source_image =~ /\.(png|jpg|jpeg|gif|bmp|tiff)$/i
-      convert_raster_to_svg(source_image, destination_image, size)
+      success = convert_raster_to_svg(source_image, destination_image, size)
     elsif size && !size.empty?
-      `magick "#{source_image}" -resize #{size} "#{destination_image}"`
+      success = system("magick \"#{source_image}\" -resize #{size} \"#{destination_image}\"")
     else
       source_width, source_height = get_image_size(source_image)
       if source_width && source_height
-        `magick "#{source_image}" -resize #{source_width}x#{source_height} "#{destination_image}"`
+        success = system("magick \"#{source_image}\" -resize #{source_width}x#{source_height} \"#{destination_image}\"")
       elsif source_image =~ /\.(svg)$/i
-        `rsvg-convert -f #{set_format(format)} -o "#{destination_image}" "#{source_image}"`
+        success = system("rsvg-convert -f #{set_format(format)} -o \"#{destination_image}\" \"#{source_image}\"")
+        unless success
+          ScreenPrinter.print_message(
+            "#{Colors::RED}ERROR:#{Colors::RESET} SVG conversion failed. Ensure librsvg is installed: brew install librsvg"
+          )
+          return false
+        end
       else
-        `magick "#{source_image}" "#{destination_image}"`
+        success = system("magick \"#{source_image}\" \"#{destination_image}\"")
       end
     end
 
+    unless success
+      ScreenPrinter.print_message(
+        "#{Colors::RED}ERROR:#{Colors::RESET} Failed to convert #{File.basename(source_image)}. Check that ImageMagick is installed: brew install imagemagick"
+      )
+      return false
+    end
+
     @converted_images += 1
+    true
   end
 
   def self.convert_raster_to_svg(source_image, destination_image, size)

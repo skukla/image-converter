@@ -5,8 +5,11 @@
 require_relative "./lib/error_handler"
 
 ErrorHandler.check_requirements(
-  "command" => ["convert", "rsvg-convert"]
+  "command" => ["magick", "rsvg-convert"]
 )
+
+# Check for optional SVG conversion tools
+ErrorHandler.check_svg_conversion_requirements
 
 require_relative "./lib/screen_printer"
 require_relative "./lib/arguments_collector"
